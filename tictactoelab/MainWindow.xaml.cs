@@ -22,13 +22,20 @@ namespace tictactoelab
     public partial class MainWindow : Window
     {
         private char[,] board = new char[3, 3];
-        private char currentPlayer = 'X';
+        private char currentPlayer;
         private bool gameEnded = false;
+
+        // Новые переменные для второй версии
+        private char playerXSymbol = 'X';
+        private char playerOSymbol = 'O';
+        private int scoreX = 0;
+        private int scoreO = 0;
 
         public MainWindow()
         {
             InitializeComponent();
             NewGame();
+            UpdateScoreDisplay();
         }
 
         private void NewGame()
@@ -38,20 +45,18 @@ namespace tictactoelab
                 for (int j = 0; j < 3; j++)
                     board[i, j] = '\0';
 
-            currentPlayer = 'X';
+            currentPlayer = playerXSymbol; // Используем кастомный символ
             gameEnded = false;
 
-            // Проверяем, что StatusLabel не равен null
             if (StatusLabel != null)
-                StatusLabel.Content = "Ход: X";
+                StatusLabel.Content = $"Ход: {currentPlayer}";
 
-            // Очищаем текст на всех кнопках
+            // Очищаем все кнопки
             ClearAllButtons();
         }
 
         private void ClearAllButtons()
         {
-            // Очищаем каждую кнопку по имени
             Button00.Content = "";
             Button01.Content = "";
             Button02.Content = "";
@@ -62,7 +67,6 @@ namespace tictactoelab
             Button21.Content = "";
             Button22.Content = "";
 
-            // Включаем все кнопки
             EnableAllButtons(true);
         }
 
@@ -85,14 +89,13 @@ namespace tictactoelab
 
             Button clickedButton = sender as Button;
             if (clickedButton.Content != null && clickedButton.Content.ToString() != "")
-                return; // Клетка уже занята
+                return;
 
-            // Получаем координаты из Tag
             string[] coordinates = clickedButton.Tag.ToString().Split(',');
             int row = int.Parse(coordinates[0]);
             int col = int.Parse(coordinates[1]);
 
-            // Делаем ход
+            // Делаем ход текущим символом
             board[row, col] = currentPlayer;
             clickedButton.Content = currentPlayer.ToString();
 
@@ -102,6 +105,14 @@ namespace tictactoelab
                 StatusLabel.Content = $"Игрок {currentPlayer} победил!";
                 gameEnded = true;
                 EnableAllButtons(false);
+
+                // Увеличиваем счет соответствующему игроку
+                if (currentPlayer == playerXSymbol)
+                    scoreX++;
+                else
+                    scoreO++;
+
+                UpdateScoreDisplay();
                 return;
             }
 
@@ -114,13 +125,12 @@ namespace tictactoelab
             }
 
             // Смена игрока
-            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+            currentPlayer = (currentPlayer == playerXSymbol) ? playerOSymbol : playerXSymbol;
             StatusLabel.Content = $"Ход: {currentPlayer}";
         }
 
         private bool CheckForWin()
         {
-            // Проверка строк и столбцов
             for (int i = 0; i < 3; i++)
             {
                 if (board[i, 0] == currentPlayer && board[i, 1] == currentPlayer && board[i, 2] == currentPlayer)
@@ -129,7 +139,6 @@ namespace tictactoelab
                     return true;
             }
 
-            // Проверка диагоналей
             if (board[0, 0] == currentPlayer && board[1, 1] == currentPlayer && board[2, 2] == currentPlayer)
                 return true;
             if (board[0, 2] == currentPlayer && board[1, 1] == currentPlayer && board[2, 0] == currentPlayer)
@@ -150,6 +159,38 @@ namespace tictactoelab
         private void NewGameButton_Click(object sender, RoutedEventArgs e)
         {
             NewGame();
+        }
+
+        // Новый метод для обновления отображения счета
+        private void UpdateScoreDisplay()
+        {
+            ScoreXText.Text = $"{playerXSymbol}: {scoreX}";
+            ScoreOText.Text = $"{playerOSymbol}: {scoreO}";
+        }
+
+        // Новый метод для применения кастомных символов
+        private void ApplySymbolsButton_Click(object sender, RoutedEventArgs e)
+        {
+            string newX = SymbolXTextBox.Text.Trim();
+            string newO = SymbolOTextBox.Text.Trim();
+
+            if (!string.IsNullOrEmpty(newX) && !string.IsNullOrEmpty(newO))
+            {
+                // Берем первый символ из каждого текстового поля
+                playerXSymbol = newX[0];
+                playerOSymbol = newO[0];
+
+                // Обновляем отображение счета
+                UpdateScoreDisplay();
+
+                // Перезапускаем игру с новыми символами
+                NewGame();
+            }
+            else
+            {
+                MessageBox.Show("Символы не могут быть пустыми!", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
     }
 }
